@@ -137,7 +137,7 @@ elseif(WIN32)
   set(SYS_QT_I18N_DIR "${CMAKE_INSTALL_PREFIX}/share/qt/translations")
 
   # Runtime libraries
-  set(MINGW_DIR "c:/msys64/mingw64" CACHE PATH "Path to MinGW installation")
+  set(MINGW_DIR "c:/msys64/ucrt64" CACHE PATH "Path to MinGW installation")
   install(
     FILES ${MINGW_DIR}/bin/zlib1.dll ${MINGW_DIR}/bin/libzstd.dll
           ${MINGW_DIR}/bin/libwinpthread-1.dll ${MINGW_DIR}/bin/libstdc++-6.dll
