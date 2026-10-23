@@ -136,14 +136,35 @@ elseif(WIN32)
   # TODO this is probably incorrect...
   set(SYS_QT_I18N_DIR "${CMAKE_INSTALL_PREFIX}/share/qt/translations")
 
-  # Runtime libraries
+  # Runtime libraries: bundle every DLL the executable needs from the MinGW
+  # installation, leaving out system DLLs.
   set(MINGW_DIR "c:/msys64/ucrt64" CACHE PATH "Path to MinGW installation")
   install(
-    FILES ${MINGW_DIR}/bin/zlib1.dll ${MINGW_DIR}/bin/libzstd.dll
-          ${MINGW_DIR}/bin/libwinpthread-1.dll ${MINGW_DIR}/bin/libstdc++-6.dll
-          ${MINGW_DIR}/bin/libgcc_s_seh-1.dll
-    COMPONENT Runtime
-    DESTINATION ".")
+    CODE "set(MINGW_DIR \"${MINGW_DIR}\")
+          set(_tagaini_exe \"$<TARGET_FILE:${tagaini_binary}>\")
+          set(CMAKE_GET_RUNTIME_DEPENDENCIES_PLATFORM windows+pe)
+          set(CMAKE_GET_RUNTIME_DEPENDENCIES_TOOL objdump)
+          set(CMAKE_GET_RUNTIME_DEPENDENCIES_COMMAND \"${CMAKE_OBJDUMP}\")"
+    COMPONENT Runtime)
+  install(
+    CODE [[
+      file(GET_RUNTIME_DEPENDENCIES
+        EXECUTABLES "${_tagaini_exe}"
+        RESOLVED_DEPENDENCIES_VAR _deps
+        UNRESOLVED_DEPENDENCIES_VAR _unresolved
+        DIRECTORIES "${MINGW_DIR}/bin"
+        PRE_EXCLUDE_REGEXES "^api-ms-" "^ext-ms-")
+      file(TO_CMAKE_PATH "${MINGW_DIR}/bin/" _mingw_bin)
+      string(TOLOWER "${_mingw_bin}" _mingw_bin)
+      foreach(_dep IN LISTS _deps)
+        string(TOLOWER "${_dep}" _dep_lower)
+        string(FIND "${_dep_lower}" "${_mingw_bin}" _pos)
+        if(_pos EQUAL 0)
+          file(INSTALL "${_dep}" DESTINATION "${CMAKE_INSTALL_PREFIX}")
+        endif()
+      endforeach()
+    ]]
+    COMPONENT Runtime)
   # Qt config file
   install(
     CODE "file(WRITE \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${RESOURCES_DIR}/qt.conf\" \"[Paths]\n\rPlugins = plugins\n\rTranslations = i18n\n\r\")"
