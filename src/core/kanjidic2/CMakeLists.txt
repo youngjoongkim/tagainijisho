@@ -7,7 +7,7 @@ set(KANJIVG_FILE
 
 set(KANJIDIC2_SOURCE https://www.edrdg.org/kanjidic/kanjidic2.xml.gz)
 set(KANJIVG_SOURCE
-    https://github.com/KanjiVG/kanjivg/releases/download/r20250422/kanjivg-20250422.xml.gz
+    https://github.com/KanjiVG/kanjivg/releases/download/r20260714/kanjivg-20260714.xml.gz
 )
 
 # Kanjidic2
