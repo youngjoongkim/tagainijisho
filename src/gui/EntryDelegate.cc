@@ -97,8 +97,24 @@ void EntryDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
     // Draw the background
     QStyleOptionViewItem opt = option;
     initStyleOption(&opt, index);
-    QStyle *style = QApplication::style();
-    style->drawPrimitive(QStyle::PE_PanelItemViewItem, &opt, painter);
+    const QWidget *widget = opt.widget;
+    QStyle *style = widget ? widget->style() : QApplication::style();
+    const bool selected = opt.state & QStyle::State_Selected;
+
+    QPalette::ColorGroup cg = QPalette::Normal;
+    if (!enabled)
+        cg = QPalette::Disabled;
+    else if (!(opt.state & QStyle::State_Active))
+        cg = QPalette::Inactive;
+    opt.palette.setCurrentColorGroup(cg);
+
+    if (selected) {
+        painter->fillRect(opt.rect, opt.palette.brush(cg, QPalette::Highlight));
+    } else {
+        style->drawPrimitive(QStyle::PE_PanelItemViewItem, &opt, painter, widget);
+    }
+
+    const QPalette::ColorRole textRole = selected ? QPalette::HighlightedText : QPalette::Text;
 
     QRect mainBbox;
     painter->setFont(layout->kanjiFont());
@@ -107,8 +123,8 @@ void EntryDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
     QStringList writings(entry->writings());
     QStringList readings(entry->readings());
     mainBbox = painter->boundingRect(wholeAreaRect, Qt::AlignTop | Qt::AlignLeft, mainRepr);
-    style->drawItemText(painter, mainBbox, Qt::AlignBaseline, QApplication::palette(), enabled,
-                        mainRepr);
+    style->drawItemText(painter, mainBbox, Qt::AlignBaseline, opt.palette, enabled, mainRepr,
+                        textRole);
 
     // Used for alternate writings and readings
     QString s = "  ";
@@ -135,7 +151,7 @@ void EntryDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
     readRect.setLeft(mainBbox.right());
     readRect.setBottom(mainBbox.bottom() - mainDescent + readDescent);
     QRect readBbox = painter->boundingRect(readRect, Qt::AlignLeft | Qt::AlignBottom, s);
-    style->drawItemText(painter, readBbox, Qt::AlignBaseline, QApplication::palette(), enabled, s);
+    style->drawItemText(painter, readBbox, Qt::AlignBaseline, opt.palette, enabled, s, textRole);
 
     s.clear();
     if (entry->meanings().size() == 1) {
@@ -162,8 +178,8 @@ void EntryDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
         defBbox = painter->boundingRect(defRect, Qt::AlignLeft | Qt::AlignBottom, s);
         s = QFontMetrics(layout->textFont()).elidedText(s, Qt::ElideRight, wholeAreaRect.width());
     }
-    style->drawItemText(painter, defBbox, Qt::AlignLeft | Qt::AlignBottom, QApplication::palette(),
-                        enabled, s);
+    style->drawItemText(painter, defBbox, Qt::AlignLeft | Qt::AlignBottom, opt.palette, enabled, s,
+                        textRole);
 
     // Now display property icons if the entry has any.
     int iconPos = wholeAreaRect.right() - 5;
