@@ -239,6 +239,8 @@ int main(int argc, char *argv[]) {
 
     checkConfigurationVersion();
 
+    MainWindow::applyApplicationTheme();
+
     checkUserProfileDirectory();
 
     // Get the default font from the settings, if set

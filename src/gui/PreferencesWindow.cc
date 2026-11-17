@@ -161,6 +161,10 @@ GeneralPreferences::GeneralPreferences(QWidget *parent)
         }
     }
 
+    theme->addItem(tr("System default"), "system");
+    theme->addItem(tr("Light"), "light");
+    theme->addItem(tr("Dark"), "dark");
+
     firstDayOfWeek->addItem(tr("Monday"), Qt::Monday);
     firstDayOfWeek->addItem(tr("Sunday"), Qt::Sunday);
 
@@ -184,6 +188,9 @@ void GeneralPreferences::refresh() {
         }
 
     alwaysShowEnglish->setChecked(Lang::alwaysShowEnglish.value());
+
+    int themeIdx = theme->findData(MainWindow::applicationTheme.value());
+    theme->setCurrentIndex(themeIdx >= 0 ? themeIdx : 0);
 
     firstDayOfWeek->setCurrentIndex(firstDayOfWeek->findData(RelativeDate::firstDayOfWeek.value()));
 
@@ -234,6 +241,16 @@ void GeneralPreferences::applySettings() {
 
     // Always show English
     Lang::alwaysShowEnglish.set(alwaysShowEnglish->isChecked());
+
+    // Theme
+    const QString previousTheme = MainWindow::applicationTheme.value();
+    const QString selectedTheme = theme->currentData().toString();
+    if (selectedTheme == MainWindow::applicationTheme.defaultValue())
+        MainWindow::applicationTheme.reset();
+    else
+        MainWindow::applicationTheme.set(selectedTheme);
+    if (MainWindow::applicationTheme.value() != previousTheme)
+        MainWindow::applyApplicationTheme();
 
     // First day of week
     RelativeDate::firstDayOfWeek.set(static_cast<Qt::DayOfWeek>(

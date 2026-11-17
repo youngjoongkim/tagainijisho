@@ -32,7 +32,8 @@ class EntryFormatter : public QObject {
     static QMap<int, EntryFormatter *> _formatters;
 
   protected:
-    QString _css;
+    QString _baseCss;
+    QString _customCss;
     QString _html;
 
     /**
@@ -49,7 +50,7 @@ class EntryFormatter : public QObject {
     QString formatString(const QString &str, formatType type) const;
 
   public:
-    const QString &CSS() const { return _css; }
+    QString CSS() const;
     const QString &htmlTemplate() const { return _html; }
 
     /// Returns the color associated to the score of this entry

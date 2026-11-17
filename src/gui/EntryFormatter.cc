@@ -23,6 +23,7 @@
 #include "gui/EntryFormatter.h"
 #include "gui/EntryListModel.h"
 
+#include <QApplication>
 #include <QFile>
 #include <QLocale>
 #include <QUrl>
@@ -72,19 +73,9 @@ EntryFormatter::EntryFormatter(const QString &_cssFile, const QString &_htmlFile
     else {
         QFile f(cssFile);
         if (f.open(QIODevice::ReadOnly)) {
-            _css = QString::fromUtf8(f.readAll());
+            _baseCss = QString::fromUtf8(f.readAll());
         }
     }
-    // Append colors
-    _css += QString(".subinfo {\n\tbackground-color: %1;\n}\n")
-                .arg(QPalette().color(QPalette::Dark).name());
-    _css += QString(".subinfo .title {\n\tbackground-color: %1;\n}\n")
-                .arg(QPalette().color(QPalette::Midlight).name());
-    _css += QString(".subinfo .contents {\n\tbackground-color: %1;\n}\n")
-                .arg(QPalette().color(QPalette::Midlight).name());
-    _css += QString(".notes {\n\tbackground-color: %1; \n\tcolor: %2;\n}\n")
-                .arg(QPalette().color(QPalette::ToolTipBase).name())
-                .arg(QPalette().color(QPalette::ToolTipText).name());
 
     // Append custom CSS if specified
     if (!_cssFile.isEmpty()) {
@@ -92,10 +83,26 @@ EntryFormatter::EntryFormatter(const QString &_cssFile, const QString &_htmlFile
         if (!cssFile.isEmpty()) {
             QFile f(cssFile);
             if (f.open(QIODevice::ReadOnly)) {
-                _css += QString::fromUtf8(f.readAll());
+                _customCss = QString::fromUtf8(f.readAll());
             }
         }
     }
+}
+
+QString EntryFormatter::CSS() const {
+    const QPalette pal = QApplication::palette();
+    QString css = _baseCss;
+    css += QString(".subinfo {\n\tbackground-color: %1;\n}\n")
+               .arg(pal.color(QPalette::Dark).name());
+    css += QString(".subinfo .title {\n\tbackground-color: %1;\n}\n")
+               .arg(pal.color(QPalette::Midlight).name());
+    css += QString(".subinfo .contents {\n\tbackground-color: %1;\n}\n")
+               .arg(pal.color(QPalette::Midlight).name());
+    css += QString(".notes {\n\tbackground-color: %1; \n\tcolor: %2;\n}\n")
+               .arg(pal.color(QPalette::ToolTipBase).name())
+               .arg(pal.color(QPalette::ToolTipText).name());
+    css += _customCss;
+    return css;
 }
 
 bool EntryFormatter::registerFormatter(const int entryType, EntryFormatter *formatter) {

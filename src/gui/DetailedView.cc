@@ -36,6 +36,7 @@
 #include <QDesktopServices>
 #include <QDir>
 #include <QDrag>
+#include <QGuiApplication>
 #include <QMap>
 #include <QMenu>
 #include <QPalette>
@@ -486,11 +487,21 @@ DetailedViewFonts::DetailedViewFonts(QWidget *parent) : QObject(parent) {
     if (!kanaHeaderFont.value().isEmpty())
         _font[KanaHeader].fromString(kanaHeaderFont.value());
 
+    refreshColors();
+    connect(qApp, &QGuiApplication::paletteChanged, this, &DetailedViewFonts::onPaletteChanged);
+}
+
+void DetailedViewFonts::refreshColors() {
     _color[DefaultText] = defaultColor(DefaultText);
     _color[Kanji] = defaultColor(Kanji);
     _color[Kana] = defaultColor(Kana);
     _color[KanjiHeader] = defaultColor(KanjiHeader);
     _color[KanaHeader] = defaultColor(KanaHeader);
+}
+
+void DetailedViewFonts::onPaletteChanged() {
+    refreshColors();
+    emit fontsHaveChanged();
 }
 
 void DetailedViewFonts::_setFont(FontRole role, const QFont &font) { _font[role] = font; }

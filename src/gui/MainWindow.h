@@ -129,6 +129,8 @@ class MainWindow : public QMainWindow, private Ui::MainWindow {
     QMenu *helpMenu() { return _helpMenu; }
 
     static PreferenceItem<QString> applicationFont;
+    static PreferenceItem<QString> applicationTheme;
+    static void applyApplicationTheme();
     static PreferenceItem<bool> autoCheckUpdates;
     static PreferenceItem<bool> autoCheckBetaUpdates;
     static PreferenceItem<int> updateCheckInterval;

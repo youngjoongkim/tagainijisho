@@ -114,6 +114,10 @@ class DetailedViewFonts : public QObject {
     QTextCharFormat _charFormat(FontRole role) const;
     QString _CSS(FontRole role) const;
     QString _HTML(FontRole role) const;
+    void refreshColors();
+
+  private slots:
+    void onPaletteChanged();
 
   public:
     DetailedViewFonts(QWidget *parent = 0);

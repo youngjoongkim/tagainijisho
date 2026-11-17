@@ -48,6 +48,12 @@
 #include <QMessageBox>
 #include <QScreen>
 #include <QStatusBar>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+#include <QStyleHints>
+#else
+#include <QStyle>
+#include <QStyleFactory>
+#endif
 #include <QTextBrowser>
 #include <QTextEdit>
 #include <QToolBar>
@@ -62,6 +68,7 @@ UpdateChecker *_updateChecker = 0;
 UpdateChecker *_betaUpdateChecker = 0;
 
 PreferenceItem<QString> MainWindow::applicationFont("mainWindow", "defaultFont", "");
+PreferenceItem<QString> MainWindow::applicationTheme("mainWindow", "theme", "system");
 PreferenceItem<bool> MainWindow::autoCheckUpdates("mainWindow", "autoCheckUpdates", true);
 PreferenceItem<bool> MainWindow::autoCheckBetaUpdates("mainWindow", "autoCheckBetaUpdates", false);
 PreferenceItem<int> MainWindow::updateCheckInterval("mainWindow", "updateCheckInterval", 3);
@@ -658,4 +665,56 @@ void MainWindow::restoreWholeState() {
     // Geometry & state
     restoreGeometry(windowGeometry.value());
     restoreState(windowState.value(), MAINWINDOW_STATE_VERSION);
+}
+
+void MainWindow::applyApplicationTheme() {
+    const QString &theme = applicationTheme.value();
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    Qt::ColorScheme scheme = Qt::ColorScheme::Unknown;
+    if (theme == "light")
+        scheme = Qt::ColorScheme::Light;
+    else if (theme == "dark")
+        scheme = Qt::ColorScheme::Dark;
+    QGuiApplication::styleHints()->setColorScheme(scheme);
+#else
+    static const QString defaultStyleName = QApplication::style()->objectName();
+    static const QPalette defaultPalette = QApplication::palette();
+    static bool overridden = false;
+
+    if (theme == "light" || theme == "dark") {
+        if (QStyle *fusion = QStyleFactory::create("Fusion")) {
+            QApplication::setStyle(fusion);
+            if (theme == "dark") {
+                QPalette darkPalette;
+                darkPalette.setColor(QPalette::Window, QColor(53, 53, 53));
+                darkPalette.setColor(QPalette::WindowText, Qt::white);
+                darkPalette.setColor(QPalette::Base, QColor(35, 35, 35));
+                darkPalette.setColor(QPalette::AlternateBase, QColor(53, 53, 53));
+                darkPalette.setColor(QPalette::ToolTipBase, QColor(25, 25, 25));
+                darkPalette.setColor(QPalette::ToolTipText, Qt::white);
+                darkPalette.setColor(QPalette::Text, Qt::white);
+                darkPalette.setColor(QPalette::Button, QColor(53, 53, 53));
+                darkPalette.setColor(QPalette::ButtonText, Qt::white);
+                darkPalette.setColor(QPalette::BrightText, Qt::red);
+                darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
+                darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
+                darkPalette.setColor(QPalette::HighlightedText, Qt::black);
+                darkPalette.setColor(QPalette::Disabled, QPalette::Text, QColor(127, 127, 127));
+                darkPalette.setColor(QPalette::Disabled, QPalette::ButtonText,
+                                     QColor(127, 127, 127));
+                darkPalette.setColor(QPalette::Disabled, QPalette::WindowText,
+                                     QColor(127, 127, 127));
+                QApplication::setPalette(darkPalette);
+            } else {
+                QApplication::setPalette(fusion->standardPalette());
+            }
+            overridden = true;
+        }
+    } else if (overridden) {
+        if (QStyle *style = QStyleFactory::create(defaultStyleName))
+            QApplication::setStyle(style);
+        QApplication::setPalette(defaultPalette);
+        overridden = false;
+    }
+#endif
 }
